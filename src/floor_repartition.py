@@ -7,12 +7,14 @@ bl_info = {"name": "Easy City Addon", "category": "Object"}
 def add_floor(context, width, height):
     verts = []
     faces = []
-    for i in range(width+1):    
-        for j in range(height+1):
+    w = width + 1
+    h = height + 1
+    for i in range(w):
+        for j in range(h):
             verts.append((i, j, 0))
-            if i%2 == 1 and j%2 == 1 :
-                faces.append((i-1, i, j-1, j))
- 
+            if i > 0 and j > 0:
+                faces.append(((i*h)+j, (i*h)+(j-1), ((i-1)*h)+(j-1), ((i-1)*h)+j))
+    
     me = bpy.data.meshes.new("Floor")
     me.from_pydata(verts, [], faces)
     ob = bpy.data.objects.new("Floor", me)
