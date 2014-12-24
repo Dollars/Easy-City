@@ -5,15 +5,20 @@ import numpy as np
 bl_info = {"name": "Easy City Addon", "category": "Object"}
 
 def add_floor(context, width, height):
-	bpy.ops.mesh.primitive_grid_add(x_subdivisions=width*2, y_subdivisions=height*2, enter_editmode=True)
-	floor = bpy.data.objects['Grid']
-	floor.name = "Floor"
-	bpy.context.scene.objects.active = floor
-
-	floor.scale.x = width
-	floor.scale.y = height
-
-	return floor
+    verts = []
+    faces = []
+    for i in range(width+1):    
+        for j in range(height+1):
+            verts.append((i, j, 0))
+            if i%2 == 1 and j%2 == 1 :
+                faces.append((i-1, i, j-1, j))
+ 
+    me = bpy.data.meshes.new("Floor")
+    me.from_pydata(verts, [], faces)
+    ob = bpy.data.objects.new("Floor", me)
+    context.scene.objects.link(ob)
+    context.scene.objects.active = ob
+    return ob
 
 class MESH_OT_primitive_floor_add(bpy.types.Operator):
     '''Add a floor'''
