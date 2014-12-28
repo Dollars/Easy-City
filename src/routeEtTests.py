@@ -2,12 +2,13 @@ import bpy
 from bpy.props import *
 import numpy as np
 import random
+from math import *
 
 #Principe : Parcours classique de la matrice. Quand m[i][j]=0, création d'un bloc de building (m[][]=1), de largeur 2 (ou 1 quand ce n'est pas possible autrement) et de taille random (entre 2 et tailleMaxBloc) positionner
 #horizontalement ou verticalement. Le bloc est ensuite entouré de rue (m[][]=1). Répété jusqu'au remplissage de la matrice.
 
-tailleMaxBloc=7
-size=15
+tailleMaxBloc=15
+size=40
 matrice=np.zeros((size,size),int)
 i=0;j=0;count=0
 
@@ -158,6 +159,32 @@ for i in range (0, size):
                     matrice[i][j]=4
                     
                     
+#Parks in the city
+
+pcPark=0.5  #pcPark E [0,1]
+nbrOfBuildings=sum(sum(matrice==1))
+nbrOfParks=floor(nbrOfBuildings*pcPark)
+
+for i in range (0, nbrOfParks):
+    keepSearching=True
+    x=random.randint(0,size-1)
+    y=random.randint(0,size-1)
+    while keepSearching:
+        if matrice[x][y]==1:
+            matrice[x][y]=-1
+            keepSearching=False
+        else:
+            y+=1
+            if y==size:
+                y=0
+                x+=1
+                if x==size:
+                    x=0
+                    
+
+
+                    
+                    
 #Plan avec routes
 
 scene = bpy.context.scene
@@ -168,11 +195,13 @@ floor.name = 'Terrain'                                  # change name
 floor.scale = (size, size, 1)                           # resize
 """
 
-buildings=[bpy.data.objects.get('building1'),bpy.data.objects.get('building2'),bpy.data.objects.get('building3')]
+buildings=[bpy.data.objects.get('building1'),bpy.data.objects.get('building2'),bpy.data.objects.get('building3'),bpy.data.objects.get('building4')]
 
 route1Obj = bpy.data.objects.get('route1')
 route2Obj = bpy.data.objects.get('route2')
 route3Obj = bpy.data.objects.get('route3')
+
+parkObj= bpy.data.objects.get('park')
 
 
 for i in range(0,size):
@@ -190,9 +219,13 @@ for i in range(0,size):
             newRoute3.location = (2*i,2*j,0) 
             scene.objects.link(newRoute3)
         elif matrice[i][j]==1:
-            newbuild=buildings[random.randint(0,2)].copy()
+            newbuild=buildings[random.randint(0,3)].copy()
             newbuild.location = (2*i,2*j,0) 
             scene.objects.link(newbuild)
+        elif matrice[i][j]==-1:
+            newPark=parkObj.copy()
+            newPark.location = (2*i,2*j,0) 
+            scene.objects.link(newPark)
             
 
 
