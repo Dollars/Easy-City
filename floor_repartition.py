@@ -8,6 +8,7 @@ from bpy.props import *
 import numpy as np
 import bmesh
 import random
+from math import *
 
 # def add_floor(context, width, height):
 #     verts = []
@@ -180,6 +181,7 @@ def road_direction(matrice):
 
 #Parks in the city
 def park_creation(matrice, park_mean):
+    size = len(matrice)
     pcPark = park_mean
     nbrOfBuildings = sum(sum(matrice == 1))
     nbrOfParks = floor(nbrOfBuildings*pcPark)
@@ -226,9 +228,9 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     b_rep.parent = city
 
     bpy.ops.object.add(type='EMPTY')
-    parks = bpy.context.object
-    parks.name = 'parks'
-    parks.parent = city
+    p_rep = bpy.context.object
+    p_rep.name = 'parks'
+    p_rep.parent = city
 
     matrice = np.zeros((size, size), int)
     floor_repartition(matrice, size, max_block_size)
@@ -258,7 +260,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 scene.objects.link(newbuild)
                 newbuild.parent = b_rep
             elif matrice[i][j] == -1:
-                newPark=parkObj.copy()
+                newPark=parks[random.randint(0, len(parks)-1)].copy()
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
-                newbuild.parent = parks
+                newPark.parent = p_rep
