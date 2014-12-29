@@ -178,8 +178,29 @@ def road_direction(matrice):
                     if horizontal:
                         matrice[i][j] = 4
 
+#Parks in the city
+def park_creation(matrice, park_mean):
+    pcPark = park_mean
+    nbrOfBuildings = sum(sum(matrice == 1))
+    nbrOfParks = floor(nbrOfBuildings*pcPark)
 
-def draw_roads_and_buildings(size, max_block_size, buildings, roads):
+    for i in range (0, nbrOfParks):
+        keepSearching = True
+        x = random.randint(0,size-1)
+        y = random.randint(0,size-1)
+        while keepSearching:
+            if matrice[x][y] == 1:
+                matrice[x][y] = -1
+                keepSearching = False
+            else:
+                y += 1
+                if y == size:
+                    y = 0
+                    x += 1
+                    if x == size:
+                        x = 0
+
+def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean):
     scene = bpy.context.scene
 
     """bpy.ops.mesh.primitive_plane_add(location=(size, size, 0))    # add plane
@@ -204,9 +225,15 @@ def draw_roads_and_buildings(size, max_block_size, buildings, roads):
     b_rep.name = 'Buildings'
     b_rep.parent = city
 
+    bpy.ops.object.add(type='EMPTY')
+    parks = bpy.context.object
+    parks.name = 'parks'
+    parks.parent = city
+
     matrice = np.zeros((size, size), int)
     floor_repartition(matrice, size, max_block_size)
     road_direction(matrice)
+    park_creation(matrice, park_mean)
 
     for i in range (0, len(matrice)):
         for j in range (0, len(matrice[0])):
@@ -217,17 +244,21 @@ def draw_roads_and_buildings(size, max_block_size, buildings, roads):
                 newRoute1.parent = road
             elif matrice[i][j] == 4:
                 newRoute2 = route2Obj.copy()
-                newRoute2.location = (2*i, 2*j, 0) 
+                newRoute2.location = (2*i, 2*j, 0)
                 scene.objects.link(newRoute2)
                 newRoute2.parent = road
             elif matrice[i][j] == 5:
                 newRoute3 = route3Obj.copy()
-                newRoute3.location = (2*i, 2*j, 0) 
+                newRoute3.location = (2*i, 2*j, 0)
                 scene.objects.link(newRoute3)
                 newRoute3.parent = road
             elif matrice[i][j] == 1:
-                newbuild = buildings[random.randint(0, 2)].copy()
-                newbuild.location = (2*i, 2*j, 0) 
+                newbuild = buildings[random.randint(0, len(buildings)-1)].copy()
+                newbuild.location = (2*i, 2*j, 0)
                 scene.objects.link(newbuild)
                 newbuild.parent = b_rep
- 
+            elif matrice[i][j] == -1:
+                newPark=parkObj.copy()
+                newPark.location = (2*i, 2*j, 0)
+                scene.objects.link(newPark)
+                newbuild.parent = parks

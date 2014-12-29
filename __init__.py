@@ -26,6 +26,7 @@ import os
 
 bpy.types.Scene.city_size = IntProperty(name="Size", default=10)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
+bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
 
 #
 #   class EasyCityPanel(bpy.types.Panel):
@@ -50,6 +51,7 @@ class EasyCityPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scene, 'city_size')
         row.prop(scene, 'max_block_size')
+        row.prop(scene, 'park_mean')
         row = layout.row()
         row.operator('city.generate')
         row.operator('city.delete')
@@ -70,6 +72,10 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         with bpy.data.libraries.load(buildingsfilepath, link=True) as (data_from, data_to):
             data_to.objects = [name for name in data_from.objects if name.startswith("building")]
 
+        parksfilepath = os.path.join(directory, "models/parks.blend")
+        with bpy.data.libraries.load(parksfilepath, link=True) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name.startswith("park")]
+
         scene = context.scene
         
         # Remove previous city (if any)
@@ -87,14 +93,16 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         
         size = scene.city_size
         max_block_size = scene.max_block_size
+        park_mean = scene.park_mean
 
         roads = {	"horizontal": bpy.data.objects['route1'],
         			"vertical": bpy.data.objects['route2'],
         			"crossing": bpy.data.objects['route3']}
 
         buildings = [obj for obj in bpy.data.objects if "building" in obj.name]
+        parks = [obj for obj in bpy.data.objects if "park" in obj.name]
 
-        floor_repartition.draw_roads_and_buildings(size, max_block_size, buildings, roads)
+        floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
         
         # # Create a duplicate linked object of '_Building1'
         # for x in np.linspace(-size/2, size/2, size):
