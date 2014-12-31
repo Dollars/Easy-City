@@ -244,20 +244,42 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newRoute1.location = (2*i, 2*j, 0)
                 scene.objects.link(newRoute1)
                 newRoute1.parent = road
+                #newRoute1.select=False
             elif matrice[i][j] == 4:
                 newRoute2 = route2Obj.copy()
                 newRoute2.location = (2*i, 2*j, 0)
                 scene.objects.link(newRoute2)
                 newRoute2.parent = road
+                #newRoute2.select=False
             elif matrice[i][j] == 5:
                 newRoute3 = route3Obj.copy()
                 newRoute3.location = (2*i, 2*j, 0)
                 scene.objects.link(newRoute3)
                 newRoute3.parent = road
+                #newRoute3.select=False
             elif matrice[i][j] == 1:
                 newbuild = buildings[random.randint(0, len(buildings)-1)].copy()
-                newbuild.location = (2*i, 2*j, 0)
                 scene.objects.link(newbuild)
+                newbuild.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newbuild.select=True
+                if "house" in newbuild.name:
+                    if i>0 and i+1<size and j>0 and j+1<size:
+                        if matrice[i-1][j]>1:
+                            bpy.ops.transform.rotate(value=-3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                        elif matrice[i][j-1]>1:
+                            bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                        elif matrice[i][j+1]>1:
+                            bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                    elif i==0:
+                        bpy.ops.transform.rotate(value=-3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                    elif j==0:
+                        bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                    elif j+1==size:
+                        bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                else:
+                    bpy.ops.transform.rotate(value=random.sample([0, -3.14159, 1.5708, -1.5708],  1)[0], axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newbuild.select=False
                 newbuild.parent = b_rep
             elif matrice[i][j] == -1:
                 newPark=parks[random.randint(0, len(parks)-1)].copy()

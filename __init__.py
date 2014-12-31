@@ -70,7 +70,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
 
         buildingsfilepath = os.path.join(directory, "models/buildings.blend")
         with bpy.data.libraries.load(buildingsfilepath, link=True) as (data_from, data_to):
-            data_to.objects = [name for name in data_from.objects if name.startswith("building")]
+            data_to.objects = [name for name in data_from.objects if (name.startswith("building") or name.startswith("house"))]
 
         parksfilepath = os.path.join(directory, "models/parks.blend")
         with bpy.data.libraries.load(parksfilepath, link=True) as (data_from, data_to):
@@ -99,7 +99,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         			"vertical": bpy.data.objects['route2'],
         			"crossing": bpy.data.objects['route3']}
 
-        buildings = [obj for obj in bpy.data.objects if "building" in obj.name]
+        buildings = [obj for obj in bpy.data.objects if ("building" in obj.name or "house" in obj.name)]
         parks = [obj for obj in bpy.data.objects if "park" in obj.name]
 
         floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
