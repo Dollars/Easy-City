@@ -151,33 +151,51 @@ def floor_repartition(matrice, size, tailleMaxBloc):
                  j += 1
 
 def road_direction(matrice):
-    # Direction aux routes : Vertical=3; Horizontal=4; Croisement=5
+    # Direction aux routes : Vertical=30; Horizontal=31; T=40 41 42 43; L=50 51 52 53 54 Croisement=60
     size = len(matrice)
     for i in range (0, size):
         for j in range (0, size):
-            vertical = 0
-            horizontal = 0
+            up = 0
+            down = 0
+            left = 0
+            right = 0
             if matrice[i][j] == 2:
-                print(i, j)
-                if j-1 > 0:
+                if j > 0:
                     if matrice[i][j-1] > 1:
-                        horizontal = 1
+                        left = 1
                 if j+1 < size:
                     if matrice[i][j+1] > 1:
-                        horizontal = 1
-                if i-1 > 0:
+                        right = 1
+                if i > 0:
                     if matrice[i-1][j] > 1:
-                        vertical = 1
+                        up = 1
                 if i+1 < size:
                     if matrice[i+1][j] > 1:
-                        vertical = 1
-                if vertical and horizontal:
-                    matrice[i][j] = 5
-                else:
-                    if vertical:
-                        matrice[i][j] = 3
-                    if horizontal:
-                        matrice[i][j] = 4
+                        down = 1
+                
+                if up and down and left and right:
+                    matrice[i][j]=60
+                elif up and down and right:
+                    matrice[i][j]=40
+                elif up and down and left:
+                    matrice[i][j]=41
+                elif up and left and right:
+                    matrice[i][j]=42
+                elif down and left and right:
+                    matrice[i][j]=43
+                elif up and right:
+                    matrice[i][j]=50
+                elif right and down:
+                    matrice[i][j]=51
+                elif down and left:
+                    matrice[i][j]=52
+                elif left and up:
+                    matrice[i][j]=53
+                elif up or down:
+                    matrice[i][j]=30
+                elif right or left:
+                    matrice[i][j]=31
+
 
 #Parks in the city
 def park_creation(matrice, park_mean):
@@ -211,9 +229,10 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     floor.scale = (size, size, 1)                           # resize
     """
 
-    route1Obj = roads["horizontal"]
-    route2Obj = roads["vertical"]
-    route3Obj = roads["crossing"]
+    roadStraight = roads["straight"]
+    roadT = roads["roadT"]
+    roadL = roads["roadL"]
+    roadX = roads["roadX"]
 
     city = bpy.data.objects['City']
 
@@ -239,24 +258,100 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
 
     for i in range (0, len(matrice)):
         for j in range (0, len(matrice[0])):
-            if matrice[i][j] == 3:
-                newRoute1 = route1Obj.copy()
-                newRoute1.location = (2*i, 2*j, 0)
-                scene.objects.link(newRoute1)
-                newRoute1.parent = road
-                #newRoute1.select=False
-            elif matrice[i][j] == 4:
-                newRoute2 = route2Obj.copy()
-                newRoute2.location = (2*i, 2*j, 0)
-                scene.objects.link(newRoute2)
-                newRoute2.parent = road
-                #newRoute2.select=False
-            elif matrice[i][j] == 5:
-                newRoute3 = route3Obj.copy()
-                newRoute3.location = (2*i, 2*j, 0)
-                scene.objects.link(newRoute3)
-                newRoute3.parent = road
-                #newRoute3.select=False
+            if matrice[i][j] == 30:
+                newRoad = roadStraight.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 31:
+                newRoad = roadStraight.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                newRoad.parent = road
+            elif matrice[i][j] == 40:
+                newRoad = roadT.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 41:
+                newRoad = roadT.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 42:
+                newRoad = roadT.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 43:
+                newRoad = roadT.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=0, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+
+            elif matrice[i][j] == 50:
+                newRoad = roadL.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 51:
+                newRoad = roadL.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 52:
+                newRoad = roadL.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=0, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            elif matrice[i][j] == 53:
+                newRoad = roadL.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newRoad.select=True
+                bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newRoad.select=False
+                newRoad.parent = road
+            
+            elif matrice[i][j] == 60:
+                newRoad = roadX.copy()
+                scene.objects.link(newRoad)
+                newRoad.location = (2*i, 2*j, 0)
+                newRoad.parent = road
+
             elif matrice[i][j] == 1:
                 newbuild = buildings[random.randint(0, len(buildings)-1)].copy()
                 scene.objects.link(newbuild)
