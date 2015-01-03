@@ -103,6 +103,9 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         buildings = [obj for obj in bpy.data.objects if ("building" in obj.name or "house" in obj.name)]
         parks = [obj for obj in bpy.data.objects if "park" in obj.name]
 
+        bpy.context.scene.render.engine = 'CYCLES'
+
+
         floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
         
         # # Create a duplicate linked object of '_Building1'
