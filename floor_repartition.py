@@ -256,6 +256,8 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     road_direction(matrice)
     park_creation(matrice, park_mean)
 
+    np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
+
     for i in range (0, len(matrice)):
         for j in range (0, len(matrice[0])):
             if matrice[i][j] == 30:
