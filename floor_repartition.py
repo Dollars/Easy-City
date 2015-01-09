@@ -196,6 +196,52 @@ def road_direction(matrice):
                 elif right or left:
                     matrice[i][j]=31
 
+def test_right_neighbor(matrice, val, return_bool=True):
+    matriceMap = (matrice == val).astype(int)
+    matriceMapHoriz = np.roll(matriceMap, -1, 1)
+    matriceMapHoriz[:,-1:].fill(0)
+    matriceMapHoriz += matriceMap
+    if (return_bool):
+        return (matriceMapHoriz >= 2)
+    else:
+        return matriceMapHoriz
+
+def test_below_neighbor(matrice, val, return_bool=True):
+    matriceMap = (matrice == val).astype(int)
+    matriceMapVert = np.roll(matriceMap, -1, 0)
+    matriceMapVert[-1:].fill(0)
+    matriceMapVert += matriceMap
+    if (return_bool):
+        return (matriceMapVert >= 2)
+    else:
+        return matriceMapVert
+
+def find_first_pattern(matrice, pattern):
+    out = np.zeros_like(matrice)
+    coord = np.transpose(np.nonzero(matrice))
+    shape = np.transpose(np.nonzero(pattern))
+
+    for i in coord:
+        slicex = i[0] + pattern.shape[0]
+        slicey = i[1] + pattern.shape[1]
+        sub_m = matrice[i[0]:slicex, i[1]:slicey]
+        found_shape = ((sub_m == pattern).all() and sub_m.shape == pattern.shape)
+        if found_shape:
+            out[i[0]:slicex, i[1]:slicey] = 2
+            out[i[0]][i[1]] = 1
+            break
+
+    return out
+
+def mark_all_patterns(matrice, pattern, pattern_val=1, pos_val=-1, fill_val=10):
+    while pattern_val != pos_val:
+        grid = (matrice == pattern_val).astype(int)
+        m = find_first_pattern(grid, pattern)
+        if m.any():
+            matrice[m == 1] = pos_val
+            matrice[m == 2] = fill_val
+        else:
+            break
 
 #Parks in the city
 def park_creation(matrice, park_mean):
@@ -219,6 +265,10 @@ def park_creation(matrice, park_mean):
                     x += 1
                     if x == size:
                         x = 0
+
+    mark_all_patterns(matrice, np.array([[1,1], [1,1]]), -1, -20, 10)
+    mark_all_patterns(matrice, np.array([[1,1]]), -1, -10, 10)
+    mark_all_patterns(matrice, np.array([[1], [1]]), -1, -15, 10)
 
 def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean):
     scene = bpy.context.scene
@@ -256,7 +306,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     road_direction(matrice)
     park_creation(matrice, park_mean)
 
-    np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
+    # np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
 
     for i in range (0, len(matrice)):
         for j in range (0, len(matrice[0])):
@@ -379,7 +429,25 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newbuild.select=False
                 newbuild.parent = b_rep
             elif matrice[i][j] == -1:
-                newPark=parks[random.randint(0, len(parks)-1)].copy()
+                newPark=parks[random.randint(0, 1)].copy()
+                newPark.location = (2*i, 2*j, 0)
+                scene.objects.link(newPark)
+                newPark.parent = p_rep
+            elif matrice[i][j] == -10:
+                newPark=parks[2].copy()
+                newPark.location = (2*i, 2*j, 0)
+                scene.objects.link(newPark)
+                newPark.parent = p_rep
+            elif matrice[i][j] == -15:
+                newPark=parks[2].copy()
+                scene.objects.link(newPark)
+                newPark.location = (2*i, 2*j, 0)
+                bpy.ops.object.select_all(action='DESELECT')
+                newPark.select=True
+                bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+                newPark.parent = p_rep
+            elif matrice[i][j] == -20:
+                newPark=parks[3].copy()
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
