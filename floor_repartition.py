@@ -42,6 +42,8 @@ from math import *
 # bpy.ops.mesh.separate(type='SELECTED')
 # bm.free()  # free and prevent further access
 
+
+
 def floor_repartition(matrice, size, tailleMaxBloc):
     for i in range (0, size):
         j = 0
@@ -306,7 +308,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     road_direction(matrice)
     park_creation(matrice, park_mean)
 
-    # np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
+    #np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
 
     for i in range (0, len(matrice)):
         for j in range (0, len(matrice[0])):
@@ -451,3 +453,168 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
+    cityMatrice=matrice
+
+
+def cameraPath(matrice):
+    bpy.ops.object.select_all(action='DESELECT')
+    camera = bpy.data.objects.get('Camera') 
+    bpy.context.scene.frame_current = 0
+    speed=12
+    vidLimit=25
+
+    size=len(matrice)
+    i=math.floor(size/2)
+    j=i
+    z=60
+    iAngle=0
+    jAngle=0
+    zAngle=0
+
+    if matrice[i][j]>1:
+        i=j
+    elif matrice[i+1][j]>1:
+        i+=1
+    elif matrice[i-1][j]>1:
+        i-=1
+    elif matrice[i][j+1]>1:
+        j+=1
+    elif matrice[i][j-1]>1:
+        j-=1
+        
+    if matrice[i][j]==30:
+        if random.randint(0,1):
+            zAngle=math.radians(90)
+        else:
+            zAngle=-math.radians(90)
+
+
+    while z>10:
+        camera.location=[2*i,2*j,z]
+        camera.rotation_euler=[iAngle,jAngle,zAngle]
+        camera.select=True
+        bpy.ops.anim.keyframe_insert_menu(type='Location')
+        bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+        bpy.context.scene.frame_current +=speed
+        z-=10
+
+    iAngle=math.radians(100)
+    camera.rotation_euler=[iAngle,jAngle,zAngle]
+
+    while i>=0 and j>=0 and i<size and j<size and vidLimit>0:
+        vidLimit-=1
+        camera.location=[2*i,2*j,0.5]
+        if matrice[i][j]==30:
+            camera.select=True
+            bpy.ops.anim.keyframe_insert_menu(type='Location')
+            bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+            bpy.context.scene.frame_current +=speed
+            if (math.degrees(zAngle)%360-90)**2<2:
+                i-=1                    
+            else:
+                i+=1
+        elif matrice[i][j]==31:
+            camera.select=True
+            bpy.ops.anim.keyframe_insert_menu(type='Location')
+            bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+            bpy.context.scene.frame_current +=speed
+            if ((math.degrees(zAngle)+1)%360)**2<3:
+                j+=1
+            else:
+                j-=1
+        
+        else:       
+            left=False
+            right=False
+            up=False
+            down=False
+            coeff=0
+            if (math.degrees(zAngle)%360-270)**2<1 or (math.degrees(zAngle)%360-90)**2<1:
+                if matrice[i][j]==42 or matrice[i][j]==43 or matrice[i][j]==60:
+                    if random.randint(0,1):
+                        right=True
+                    else:
+                        left=True
+                elif matrice[i][j]==40 or matrice[i][j]==50 or matrice[i][j]==51:
+                    right=True
+                elif matrice[i][j]==41 or matrice[i][j]==52 or matrice[i][j]==53:
+                    left=True
+                else:
+                    print("vertical error crossing")
+                if ((math.degrees(zAngle)%360-270)**2<1 and left) or ((math.degrees(zAngle)%360-90)**2<1 and right):
+                    coeff=1
+                else:
+                    coeff=-1
+            elif ((math.degrees(zAngle)+1)%360)**2<3 or (math.degrees(zAngle)%360-180)**2<1:
+                if matrice[i][j]==40 or matrice[i][j]==41 or matrice[i][j]==60:
+                    if random.randint(0,1):
+                        up=True
+                    else:
+                        down=True
+                elif matrice[i][j]==42 or matrice[i][j]==50 or matrice[i][j]==53:
+                    up=True
+                elif matrice[i][j]==43 or matrice[i][j]==51 or matrice[i][j]==52:
+                    down=True
+                else:
+                    print("horizontal error crossing : ", matrice[i][j])
+                if (((math.degrees(zAngle)+1)%360)**2<3 and down) or ((math.degrees(zAngle)%360-180)**2<1 and up):
+                    coeff=1
+                else:
+                    coeff=-1
+            else:
+                print("error zAngle", math.degrees(zAngle)%360**2)
+            jAngle=(math.radians(45)*coeff)/2
+            zAngle-=(math.radians(45)*coeff)
+            camera.rotation_euler=[iAngle,jAngle,zAngle]
+            camera.select=True
+            bpy.ops.anim.keyframe_insert_menu(type='Location')
+            bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+            bpy.context.scene.frame_current +=speed
+            jAngle=0
+            zAngle-=(math.radians(45)*coeff)
+            camera.rotation_euler=[iAngle,jAngle,zAngle]
+            if ((math.degrees(zAngle)+1)%360)**2<3:
+                j+=1
+            elif (math.degrees(zAngle)%360-90)**2<1:
+                i-=1
+            elif (math.degrees(zAngle)%360-180)**2<1:
+                j-=1
+            else:
+                i+=1
+                
+
+    nextJ=True
+    iAngle=math.radians(45)
+    zAngle=math.radians(-45)
+    i=0;j=0;z=size/2
+    for k in range(0,4):        
+        camera.rotation_euler=[iAngle,jAngle,zAngle]
+        camera.location=[i,j,size]
+        camera.select=True
+        bpy.ops.anim.keyframe_insert_menu(type='Location')
+        bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+        bpy.context.scene.frame_current +=speed*2
+        zAngle-=math.radians(90)
+        if nextJ:
+            j=((j+1)%(2*size+1))*2*size
+            nextJ=False
+        else:
+            i=((i+1)%(2*size+1))*2*size
+            nextJ=True
+
+
+
+
+
+            
+        #delete camera path
+    """for i in range(0,1500):
+        bpy.context.scene.frame_current=i
+        bpy.ops.anim.keyframe_delete_v3d()"""
+
+
+
+
+
+
+
