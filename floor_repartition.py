@@ -9,6 +9,7 @@ import numpy as np
 import bmesh
 import random
 from math import *
+import math
 
 # def add_floor(context, width, height):
 #     verts = []
@@ -453,7 +454,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
-    cityMatrice=matrice
+    cameraPath(matrice)
 
 
 def cameraPath(matrice):
