@@ -27,6 +27,7 @@ import os
 bpy.types.Scene.city_size = IntProperty(name="Size", default=10)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
 bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
+matrice=[]
 
 #
 #   class EasyCityPanel(bpy.types.Panel):
@@ -75,6 +76,10 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         parksfilepath = os.path.join(directory, "models/parks.blend")
         with bpy.data.libraries.load(parksfilepath, link=True) as (data_from, data_to):
             data_to.objects = [name for name in data_from.objects if name.startswith("park")]
+        
+        carsfilepath = os.path.join(directory, "models/cars.blend")
+        with bpy.data.libraries.load(carsfilepath, link=True) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name.startswith("car")]
 
         scene = context.scene
         
@@ -101,12 +106,15 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
                     "roadX": bpy.data.objects['roadX']}
 
         buildings = [obj for obj in bpy.data.objects if ("building" in obj.name or "house" in obj.name)]
-        parks = [obj for obj in bpy.data.objects if "park" in obj.name]
+        parks = [obj for obj in bpy.data.objects if "park" in obj.name] 
+        cars = [obj for obj in bpy.data.objects if "car" in obj.name]
+        print("taille cars : ",len(cars))
 
         bpy.context.scene.render.engine = 'CYCLES'
 
 
-        floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
+        matrice=floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
+        floor_repartition.carsAnim(matrice, cars)
         
         # # Create a duplicate linked object of '_Building1'
         # for x in np.linspace(-size/2, size/2, size):

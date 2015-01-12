@@ -455,6 +455,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
     cameraPath(matrice)
+    return matrice
 
 
 def cameraPath(matrice):
@@ -471,6 +472,8 @@ def cameraPath(matrice):
     iAngle=0
     jAngle=0
     zAngle=0
+    camera.select=True
+    camera.data.lens = 10.5
 
     if matrice[i][j]>1:
         i=j
@@ -615,7 +618,64 @@ def cameraPath(matrice):
 
 
 
+# Direction aux routes : Vertical=30; Horizontal=31; T=40 41 42 43; L=50 51 52 53 54 Croisement=60
+def carsAnim(matrice, cars):	
+	bpy.ops.object.add(type='EMPTY')
+	car_rep = bpy.context.object
+	car_rep.name = 'Cars'
+	listCar=[]
+	size=len(matrice)
+	for i in range(0, size):
+		for j in range(0,size):
+			tempJ=(random.randint(0,12)-6)/10
+			if matrice[i][j]==30:
+				a=1
+			elif matrice[i][j]==31:
+				newCar=cars[random.randint(0, len(cars)-1)].copy()
+				bpy.context.scene.objects.link(newCar)
+				newCar.parent = car_rep
+				if random.randint(0,1):		#to left
+					if random.randint(0,1):
+						newCar.location = (2*i-0.6, 2*j+tempJ, 0)
+					else:
+						newCar.location = (2*i-0.2, 2*j+tempJ, 0)
+					listCar.append([newCar,i,j,0])
 
+				else:		#to right
+					newCar.rotation_euler=[0,math.radians(90),math.radians(180)]
+					if random.randint(0,1):
+						newCar.location = (2*i+0.6, 2*j+tempJ, 0)
+					else:
+						newCar.location = (2*i+0.2, 2*j+tempJ, 0)
+					listCar.append([newCar,i,j,1])
 
+	bpy.context.scene.frame_current = 0
+	for k in range(0,100):
+		i=0
+		while i<len(listCar):
+			bpy.ops.object.select_all(action='DESELECT')
+			listCar[i][0].select=True
+			bpy.ops.anim.keyframe_insert_menu(type='Location')
+			bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+			if listCar[i][3]==0:
+				if listCar[i][0].location[1]+1<size:
+					listCar[i][2]-=1
+					listCar[i][0].location[1]-=2
+				else:
+					bpy.ops.object.delete(use_global=False)
+					del listCar[i]
 
-
+			elif listCar[i][3]==1:
+				if listCar[i][0].location[1]-1>0:
+					listCar[i][2]+=1
+					listCar[i][0].location[1]+=2
+				else:
+					print("allo ?")
+					bpy.ops.object.delete(use_global=False)
+					del listCar[i]
+			elif listCar[i][3]==2:
+				print("ok")
+			elif listCar[i][3]==3:
+				print("ok")
+			i+=1
+		bpy.context.scene.frame_current +=34
