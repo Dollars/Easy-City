@@ -24,7 +24,7 @@ import bpy
 from bpy.props import *
 import os
 
-bpy.types.Scene.city_size = IntProperty(name="Size", default=10)
+bpy.types.Scene.city_size = IntProperty(name="Size", default=20)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
 bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
 bpy.types.Scene.height_mean = FloatProperty(name="Mean building height", default=50.0, min=10.0, max=100.0)
