@@ -517,16 +517,18 @@ def cameraPath(matrice):
     camera.select=True
     camera.data.lens = 10.5
 
-    if matrice[i][j]>1:
+    if matrice[i][j]>1 and matrice[i][j]<100:
         i=j
-    elif matrice[i+1][j]>1:
+    elif matrice[i+1][j]>1 and matrice[i+1][j]<100:
         i+=1
-    elif matrice[i-1][j]>1:
+    elif matrice[i-1][j]>1 and matrice[i-1][j]<100:
         i-=1
-    elif matrice[i][j+1]>1:
+    elif matrice[i][j+1]>1 and matrice[i][j+1]<100:
         j+=1
-    elif matrice[i][j-1]>1:
+    elif matrice[i][j-1]>1 and matrice[i][j-1]<100:
         j-=1
+
+    print("i j :",i,j, matrice[i][j])
         
     if matrice[i][j]==30:
         if random.randint(0,1):
@@ -647,9 +649,7 @@ def cameraPath(matrice):
         else:
             i=((i+1)%(2*size+1))*2*size
             nextJ=True
-
-
-
+    bpy.context.scene.frame_end = bpy.context.scene.frame_current
 
 
             
@@ -714,7 +714,6 @@ def carsAnim(matrice, cars):
                     listCar[i][2]+=1
                     listCar[i][0].location[1]+=2
                 else:
-                    print("allo ?")
                     bpy.ops.object.delete(use_global=False)
                     del listCar[i]
             elif listCar[i][3]==2:
