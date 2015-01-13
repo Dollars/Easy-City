@@ -246,6 +246,16 @@ def mark_all_patterns(matrice, pattern, pattern_val=1, pos_val=-1, fill_val=10):
         else:
             break
 
+def mark_pattern(matrice, pattern, pattern_val=1, pos_val=-1, fill_val=10):
+    if pattern_val != pos_val:
+        grid = (matrice == pattern_val).astype(int)
+        m = find_first_pattern(grid, pattern)
+        if m.any():
+            matrice[m == 1] = pos_val
+            matrice[m == 2] = fill_val
+            return True
+    return False
+
 #Parks in the city
 def park_creation(matrice, park_mean):
     size = len(matrice)
@@ -273,7 +283,34 @@ def park_creation(matrice, park_mean):
     mark_all_patterns(matrice, np.array([[1,1]]), -1, -10, 10)
     mark_all_patterns(matrice, np.array([[1], [1]]), -1, -15, 10)
 
-def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean):
+def find_nearest(array, value):
+    idx = (np.abs(array-value)).argmin()
+    return array[idx]
+
+def building_repartition(matrice, buildings, height_mean, height_std):
+    heightmap = {(b.dimensions[2]*6):i for i,b in enumerate(buildings)}
+    block_wide = {(b.dimensions[2]*6):np.sum(np.array(b['shape'])) for b in buildings}
+    distrib = np.array([], dtype=int)
+    heights = np.array(list(block_wide.keys()))
+
+    blocks = (matrice == 1).astype(int)
+    free_space = blocks.sum()
+
+    while free_space > 0:
+        val = random.normalvariate(height_mean, height_std)
+        key = find_nearest(heights, val)
+        if free_space - block_wide[key] >= 0:
+            distrib = np.append(distrib, heightmap[key])
+            free_space = free_space - block_wide[key]
+        else:
+            heights = np.delete(heights, np.nonzero((heights == key)))
+
+    for key in distrib:
+        shape = np.array(buildings[key]['shape'])
+        mark_pattern(matrice, shape, 1, buildings[key]['index'], 10)
+
+
+def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std):
     scene = bpy.context.scene
 
     """bpy.ops.mesh.primitive_plane_add(location=(size, size, 0))    # add plane
@@ -308,6 +345,9 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     floor_repartition(matrice, size, max_block_size)
     road_direction(matrice)
     park_creation(matrice, park_mean)
+    building_repartition(matrice, buildings, height_mean, height_std)
+
+    buildings_index = {b['index']:i for i,b in enumerate(buildings)}
 
     #np.savetxt("C:/Program Files/Blender Foundation/Blender/2.72/scripts/addons/Easy-City/matrice.txt", matrice, fmt='%1.0f,')
 
@@ -407,19 +447,20 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newRoad.location = (2*i, 2*j, 0)
                 newRoad.parent = road
 
-            elif matrice[i][j] == 1:
-                newbuild = buildings[random.randint(0, len(buildings)-1)].copy()
+            elif matrice[i][j] >= 100:
+                newbuild = buildings[buildings_index[matrice[i][j]]].copy()
                 scene.objects.link(newbuild)
                 newbuild.location = (2*i, 2*j, 0)
                 bpy.ops.object.select_all(action='DESELECT')
                 newbuild.select=True
+
                 if "house" in newbuild.name:
                     if i>0 and i+1<size and j>0 and j+1<size:
-                        if matrice[i-1][j]>1:
+                        if matrice[i-1][j]>1 and matrice[i-1][j]<100:
                             bpy.ops.transform.rotate(value=-3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-                        elif matrice[i][j-1]>1:
+                        elif matrice[i][j-1]>1 and matrice[i][j-1]<100:
                             bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-                        elif matrice[i][j+1]>1:
+                        elif matrice[i][j+1]>1 and matrice[i][j+1]<100:
                             bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
                     elif i==0:
                         bpy.ops.transform.rotate(value=-3.14159, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
@@ -427,10 +468,11 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                         bpy.ops.transform.rotate(value=-1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
                     elif j+1==size:
                         bpy.ops.transform.rotate(value=1.5708, axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-                else:
+                elif np.sum(np.array(newbuild["shape"])) == 1:
                     bpy.ops.transform.rotate(value=random.sample([0, -3.14159, 1.5708, -1.5708],  1)[0], axis=(0, 0, 1), constraint_axis=(False, False, True), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
                 newbuild.select=False
                 newbuild.parent = b_rep
+
             elif matrice[i][j] == -1:
                 newPark=parks[random.randint(0, 1)].copy()
                 newPark.location = (2*i, 2*j, 0)
@@ -619,63 +661,65 @@ def cameraPath(matrice):
 
 
 # Direction aux routes : Vertical=30; Horizontal=31; T=40 41 42 43; L=50 51 52 53 54 Croisement=60
-def carsAnim(matrice, cars):	
-	bpy.ops.object.add(type='EMPTY')
-	car_rep = bpy.context.object
-	car_rep.name = 'Cars'
-	listCar=[]
-	size=len(matrice)
-	for i in range(0, size):
-		for j in range(0,size):
-			tempJ=(random.randint(0,12)-6)/10
-			if matrice[i][j]==30:
-				a=1
-			elif matrice[i][j]==31:
-				newCar=cars[random.randint(0, len(cars)-1)].copy()
-				bpy.context.scene.objects.link(newCar)
-				newCar.parent = car_rep
-				if random.randint(0,1):		#to left
-					if random.randint(0,1):
-						newCar.location = (2*i-0.6, 2*j+tempJ, 0)
-					else:
-						newCar.location = (2*i-0.2, 2*j+tempJ, 0)
-					listCar.append([newCar,i,j,0])
+def carsAnim(matrice, cars):
+    city = bpy.data.objects['City']
+    bpy.ops.object.add(type='EMPTY')
+    car_rep = bpy.context.object
+    car_rep.name = 'Cars'
+    car_rep.parent = city  
+    listCar=[]
+    size=len(matrice)
+    for i in range(0, size):
+        for j in range(0,size):
+            tempJ=(random.randint(0,12)-6)/10
+            if matrice[i][j]==30:
+                a=1
+            elif matrice[i][j]==31:
+                newCar=cars[random.randint(0, len(cars)-1)].copy()
+                bpy.context.scene.objects.link(newCar)
+                newCar.parent = car_rep
+                if random.randint(0,1):     #to left
+                    if random.randint(0,1):
+                        newCar.location = (2*i-0.6, 2*j+tempJ, 0)
+                    else:
+                        newCar.location = (2*i-0.2, 2*j+tempJ, 0)
+                    listCar.append([newCar,i,j,0])
 
-				else:		#to right
-					newCar.rotation_euler=[0,math.radians(90),math.radians(180)]
-					if random.randint(0,1):
-						newCar.location = (2*i+0.6, 2*j+tempJ, 0)
-					else:
-						newCar.location = (2*i+0.2, 2*j+tempJ, 0)
-					listCar.append([newCar,i,j,1])
+                else:       #to right
+                    newCar.rotation_euler=[0,math.radians(90),math.radians(180)]
+                    if random.randint(0,1):
+                        newCar.location = (2*i+0.6, 2*j+tempJ, 0)
+                    else:
+                        newCar.location = (2*i+0.2, 2*j+tempJ, 0)
+                    listCar.append([newCar,i,j,1])
 
-	bpy.context.scene.frame_current = 0
-	for k in range(0,100):
-		i=0
-		while i<len(listCar):
-			bpy.ops.object.select_all(action='DESELECT')
-			listCar[i][0].select=True
-			bpy.ops.anim.keyframe_insert_menu(type='Location')
-			bpy.ops.anim.keyframe_insert_menu(type='Rotation')
-			if listCar[i][3]==0:
-				if listCar[i][0].location[1]+1<size:
-					listCar[i][2]-=1
-					listCar[i][0].location[1]-=2
-				else:
-					bpy.ops.object.delete(use_global=False)
-					del listCar[i]
+    bpy.context.scene.frame_current = 0
+    for k in range(0,100):
+        i=0
+        while i<len(listCar):
+            bpy.ops.object.select_all(action='DESELECT')
+            listCar[i][0].select=True
+            bpy.ops.anim.keyframe_insert_menu(type='Location')
+            bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+            if listCar[i][3]==0:
+                if listCar[i][0].location[1]+1<size:
+                    listCar[i][2]-=1
+                    listCar[i][0].location[1]-=2
+                else:
+                    bpy.ops.object.delete(use_global=False)
+                    del listCar[i]
 
-			elif listCar[i][3]==1:
-				if listCar[i][0].location[1]-1>0:
-					listCar[i][2]+=1
-					listCar[i][0].location[1]+=2
-				else:
-					print("allo ?")
-					bpy.ops.object.delete(use_global=False)
-					del listCar[i]
-			elif listCar[i][3]==2:
-				print("ok")
-			elif listCar[i][3]==3:
-				print("ok")
-			i+=1
-		bpy.context.scene.frame_current +=34
+            elif listCar[i][3]==1:
+                if listCar[i][0].location[1]-1>0:
+                    listCar[i][2]+=1
+                    listCar[i][0].location[1]+=2
+                else:
+                    print("allo ?")
+                    bpy.ops.object.delete(use_global=False)
+                    del listCar[i]
+            elif listCar[i][3]==2:
+                print("ok")
+            elif listCar[i][3]==3:
+                print("ok")
+            i+=1
+        bpy.context.scene.frame_current +=34

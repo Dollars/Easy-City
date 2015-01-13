@@ -27,6 +27,9 @@ import os
 bpy.types.Scene.city_size = IntProperty(name="Size", default=10)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
 bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
+bpy.types.Scene.height_mean = FloatProperty(name="Mean building height", default=50.0, min=10.0, max=100.0)
+bpy.types.Scene.height_std = FloatProperty(name="Standard deviation building height", default=10.0, min=5.0, max=50.0)
+
 matrice=[]
 
 #
@@ -52,7 +55,11 @@ class EasyCityPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scene, 'city_size')
         row.prop(scene, 'max_block_size')
+        row = layout.row()
         row.prop(scene, 'park_mean')
+        row = layout.row()
+        row.prop(scene, 'height_mean')
+        row.prop(scene, 'height_std')
         row = layout.row()
         row.operator('city.generate')
         row.operator('city.delete')
@@ -99,6 +106,8 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         size = scene.city_size
         max_block_size = scene.max_block_size
         park_mean = scene.park_mean
+        height_mean = scene.height_mean
+        height_std = scene.height_std
 
         roads = {	"straight": bpy.data.objects['roadStraight'],
         			"roadL": bpy.data.objects['roadL'],
@@ -113,7 +122,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         bpy.context.scene.render.engine = 'CYCLES'
 
 
-        matrice=floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean)
+        matrice=floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std)
         floor_repartition.carsAnim(matrice, cars)
         
         # # Create a duplicate linked object of '_Building1'
