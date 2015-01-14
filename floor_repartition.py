@@ -517,15 +517,15 @@ def cameraPath(matrice):
     camera.select=True
     camera.data.lens = 10.5
 
-    if matrice[i][j]>1 and matrice[i][j]<100:
+    if matrice[i][j]>10 and matrice[i][j]<100:
         i=j
-    elif matrice[i+1][j]>1 and matrice[i+1][j]<100:
+    elif matrice[i+1][j]>10 and matrice[i+1][j]<100:
         i+=1
-    elif matrice[i-1][j]>1 and matrice[i-1][j]<100:
+    elif matrice[i-1][j]>10 and matrice[i-1][j]<100:
         i-=1
-    elif matrice[i][j+1]>1 and matrice[i][j+1]<100:
+    elif matrice[i][j+1]>10 and matrice[i][j+1]<100:
         j+=1
-    elif matrice[i][j-1]>1 and matrice[i][j-1]<100:
+    elif matrice[i][j-1]>10 and matrice[i][j-1]<100:
         j-=1
 
     print("i j :",i,j, matrice[i][j])
@@ -722,3 +722,60 @@ def carsAnim(matrice, cars):
                 print("ok")
             i+=1
         bpy.context.scene.frame_current +=34
+
+def setUrban(matrice,streetLamp,mailBox):
+	city = bpy.data.objects['City']
+	bpy.ops.object.add(type='EMPTY')
+	urbanRep = bpy.context.object
+	urbanRep.name = 'urban'
+	urbanRep.parent = city 
+	size=len(matrice)
+	for i in range (0,size):
+		for j in range(0,size):
+			if matrice[i][j]==30:
+				newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
+				bpy.context.scene.objects.link(newLamp)
+				newLamp.parent = urbanRep
+				newLamp.location = (2*i,2*j, 0)
+				newLamp.rotation_euler=[0,0,math.radians(90)]
+			elif matrice[i][j]==31:
+				newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
+				bpy.context.scene.objects.link(newLamp)
+				newLamp.parent = urbanRep
+				newLamp.location = (2*i,2*j, 0)
+
+				if random.randint(0,2):
+					newMailbox=mailBox[random.randint(0,len(mailBox)-1)].copy()
+					bpy.context.scene.objects.link(newMailbox)
+					newMailbox.parent = urbanRep
+					newMailbox.location = (2*i,2*j, 0)
+
+def setDayLight(matrice):
+	size=len(matrice)
+	sun=bpy.data.lamps.get("Lamp")
+	sunObject=bpy.data.objects.get("Lamp")
+	sun.type = 'SUN'
+	sunObject.location=[size,size,2*size]
+	sunObject.rotation_euler=[0,0,0]
+	sunObject.data.shadow_soft_size = 3
+	sun.use_nodes=True
+	sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
+
+	bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
+
+
+	materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
+	for materiel in materiels:
+		materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=0
+
+
+def setNightLight(matrice):	
+	materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
+	for materiel in materiels:
+		materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=1
+
+	bpy.context.scene.world=bpy.data.worlds.get("myWorldNight")
+	bpy.data.lamps.get("Lamp").node_tree.nodes["Emission"].inputs[0].default_value = (0.100091, 0.0998705, 0.168584, 1)
+
+
+

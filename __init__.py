@@ -88,6 +88,18 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         with bpy.data.libraries.load(carsfilepath, link=True) as (data_from, data_to):
             data_to.objects = [name for name in data_from.objects if name.startswith("car")]
 
+        urbanfilepath = os.path.join(directory, "models/urban.blend")
+        with bpy.data.libraries.load(urbanfilepath, link=True) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name.startswith("street") or name.startswith("mail")]
+
+        worldfilepath = os.path.join(directory, "models/sky.blend")
+        with bpy.data.libraries.load(worldfilepath, link=True) as (data_from, data_to): 
+            data_to.worlds = [name for name in data_from.worlds if name.startswith("myWorld")]
+
+        worldNightfilepath = os.path.join(directory, "models/skyNight.blend")
+        with bpy.data.libraries.load(worldNightfilepath, link=True) as (data_from, data_to): 
+            data_to.worlds = [name for name in data_from.worlds if name.startswith("myWorld")]
+
         scene = context.scene
         
         # Remove previous city (if any)
@@ -117,12 +129,17 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         buildings = [obj for obj in bpy.data.objects if ("building" in obj.name or "house" in obj.name)]
         parks = [obj for obj in bpy.data.objects if "park" in obj.name] 
         cars = [obj for obj in bpy.data.objects if "car" in obj.name]
+        streetLamp=[obj for obj in bpy.data.objects if "street" in obj.name]
+        mailBox=[obj for obj in bpy.data.objects if "mail" in obj.name]
         print("taille cars : ",len(cars))
 
         bpy.context.scene.render.engine = 'CYCLES'
 
 
         matrice=floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std)
+        floor_repartition.setDayLight(matrice)
+        floor_repartition.setNightLight(matrice)
+        floor_repartition.setUrban(matrice,streetLamp,mailBox)
         floor_repartition.carsAnim(matrice, cars)
         
         # # Create a duplicate linked object of '_Building1'
