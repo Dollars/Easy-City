@@ -63,6 +63,28 @@ class EasyCityPanel(bpy.types.Panel):
         row = layout.row()
         row.operator('city.generate')
         row.operator('city.delete')
+        row = layout.row()
+        row.operator('city.day')
+        row.operator('city.night')
+
+
+class OBJECT_OT_Day(bpy.types.Operator):
+    bl_idname = "city.day"
+    bl_label = "Day Light"
+    bl_description = "Set day light environment"
+    def execute(self,context):
+        floor_repartition.setDayLight(matrice)
+        return {'FINISHED'}
+
+class OBJECT_OT_Night(bpy.types.Operator):
+    bl_idname = "city.night"
+    bl_label = "Night Light"
+    bl_description = "Set night light environment"
+    def execute(self,context):
+        floor_repartition.setNightLight(matrice)
+        return {'FINISHED'}
+
+
 
 class OBJECT_OT_GenerateCity(bpy.types.Operator):
     bl_idname = "city.generate"

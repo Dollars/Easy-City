@@ -501,6 +501,13 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
 
 
 def cameraPath(matrice):
+
+    #delete camera path
+    for i in range(0,bpy.context.scene.frame_end):
+        bpy.context.scene.frame_current=i
+        bpy.ops.anim.keyframe_delete_v3d()
+
+
     bpy.ops.object.select_all(action='DESELECT')
     camera = bpy.data.objects.get('Camera') 
     bpy.context.scene.frame_current = 0
@@ -653,10 +660,7 @@ def cameraPath(matrice):
 
 
             
-        #delete camera path
-    """for i in range(0,1500):
-        bpy.context.scene.frame_current=i
-        bpy.ops.anim.keyframe_delete_v3d()"""
+
 
 
 
@@ -752,6 +756,7 @@ def setUrban(matrice,streetLamp,mailBox):
 
 def setDayLight(matrice):
 	size=len(matrice)
+	print("size : ",size)
 	sun=bpy.data.lamps.get("Lamp")
 	sunObject=bpy.data.objects.get("Lamp")
 	sun.type = 'SUN'
@@ -760,6 +765,7 @@ def setDayLight(matrice):
 	sunObject.data.shadow_soft_size = 3
 	sun.use_nodes=True
 	sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
+	sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
 
 	bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
 
