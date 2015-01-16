@@ -552,9 +552,22 @@ def cameraPath(matrice,vidLimit):
         z-=10
 
     iAngle=math.radians(100)
-    camera.rotation_euler=[iAngle,jAngle,zAngle]
 
-    while i>=0 and j>=0 and i<size and j<size and vidLimit>0:
+    while vidLimit>0:
+        if i<0:
+            zAngle+=math.radians(180)
+            i+=1
+        elif  j<0:
+            zAngle+=math.radians(180)
+            j+=1
+        elif i>=size :
+            zAngle+=math.radians(180)
+            i-=1
+        elif j>=size :
+            zAngle+=math.radians(180)
+            j-=1
+            
+        camera.rotation_euler=[iAngle,jAngle,zAngle]
         vidLimit-=1
         camera.location=[2*i,2*j,0.5]
         if matrice[i][j]==30:
@@ -708,7 +721,8 @@ def carsAnim(matrice, cars):
                     listCar[i][2]-=1
                     listCar[i][0].location[1]-=2
                 else:
-                    bpy.ops.object.delete(use_global=False)
+                    print("out : ",i)
+                    listCar[i][0].scale=[0,0,0]
                     del listCar[i]
 
             elif listCar[i][3]==1:
@@ -716,14 +730,14 @@ def carsAnim(matrice, cars):
                     listCar[i][2]+=1
                     listCar[i][0].location[1]+=2
                 else:
-                    bpy.ops.object.delete(use_global=False)
+                    listCar[i][0].scale=[0,0,0]
                     del listCar[i]
             elif listCar[i][3]==2:
                 print("ok")
             elif listCar[i][3]==3:
                 print("ok")
             i+=1
-        bpy.context.scene.frame_current +=34
+        bpy.context.scene.frame_current +=30
 
 def setUrban(matrice,streetLamp,mailBox):
 	city = bpy.data.objects['City']
