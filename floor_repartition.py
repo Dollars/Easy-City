@@ -496,11 +496,10 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
-    cameraPath(matrice)
     return matrice
 
 
-def cameraPath(matrice):
+def cameraPath(matrice,vidLimit):
 
     #delete camera path
     for i in range(0,bpy.context.scene.frame_end):
@@ -512,7 +511,6 @@ def cameraPath(matrice):
     camera = bpy.data.objects.get('Camera') 
     bpy.context.scene.frame_current = 0
     speed=12
-    vidLimit=25
 
     size=len(matrice)
     i=math.floor(size/2)
@@ -756,7 +754,6 @@ def setUrban(matrice,streetLamp,mailBox):
 
 def setDayLight(matrice):
 	size=len(matrice)
-	print("size : ",size)
 	sun=bpy.data.lamps.get("Lamp")
 	sunObject=bpy.data.objects.get("Lamp")
 	sun.type = 'SUN'
