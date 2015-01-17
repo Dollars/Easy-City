@@ -23,14 +23,20 @@ else:
 import bpy
 from bpy.props import *
 import os
+import copy
 
 bpy.types.Scene.city_size = IntProperty(name="Size", default=20)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
 bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
 bpy.types.Scene.height_mean = FloatProperty(name="Mean building height", default=50.0, min=10.0, max=100.0)
 bpy.types.Scene.height_std = FloatProperty(name="Standard deviation building height", default=10.0, min=5.0, max=50.0)
+bpy.types.Scene.path_size = IntProperty(name="Path Size", default=50, min=0)
 
 matrice=[]
+def setMatrice(mat):
+    global matrice
+    matrice=copy.deepcopy(mat)
+
 
 #
 #   class EasyCityPanel(bpy.types.Panel):
@@ -63,6 +69,40 @@ class EasyCityPanel(bpy.types.Panel):
         row = layout.row()
         row.operator('city.generate')
         row.operator('city.delete')
+        row = layout.row()
+        row.operator('city.day')
+        row.operator('city.night')
+        row = layout.row()
+        row.operator('city.camera_path')
+        row.prop(scene, 'path_size')
+
+
+class OBJECT_OT_Day(bpy.types.Operator):
+    bl_idname = "city.day"
+    bl_label = "Day Light"
+    bl_description = "Set day light environment"
+    def execute(self,context):
+        print("lenmatrice : ",len(matrice))
+        floor_repartition.setDayLight(matrice)
+        return {'FINISHED'}
+
+class OBJECT_OT_Night(bpy.types.Operator):
+    bl_idname = "city.night"
+    bl_label = "Night Light"
+    bl_description = "Set night light environment"
+    def execute(self,context):
+        floor_repartition.setNightLight(matrice)
+        return {'FINISHED'}
+
+class OBJECT_OT_Night(bpy.types.Operator):
+    bl_idname = "city.camera_path"
+    bl_label = "Generate Camera Path"
+    bl_description = "generate a camera path though the city"
+    def execute(self,context):
+        floor_repartition.cameraPath(matrice,bpy.context.scene.path_size)
+        return {'FINISHED'}
+
+
 
 class OBJECT_OT_GenerateCity(bpy.types.Operator):
     bl_idname = "city.generate"
@@ -90,7 +130,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
 
         urbanfilepath = os.path.join(directory, "models/urban.blend")
         with bpy.data.libraries.load(urbanfilepath, link=True) as (data_from, data_to):
-            data_to.objects = [name for name in data_from.objects if name.startswith("street") or name.startswith("mail")]
+            data_to.objects = [name for name in data_from.objects if name.startswith("street") or name.startswith("urban")]
 
         worldfilepath = os.path.join(directory, "models/sky.blend")
         with bpy.data.libraries.load(worldfilepath, link=True) as (data_from, data_to): 
@@ -130,17 +170,17 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         parks = [obj for obj in bpy.data.objects if "park" in obj.name] 
         cars = [obj for obj in bpy.data.objects if "car" in obj.name]
         streetLamp=[obj for obj in bpy.data.objects if "street" in obj.name]
-        mailBox=[obj for obj in bpy.data.objects if "mail" in obj.name]
+        urbanObjects=[obj for obj in bpy.data.objects if "urban" in obj.name]
         print("taille cars : ",len(cars))
 
         bpy.context.scene.render.engine = 'CYCLES'
 
 
-        matrice=floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std)
-        floor_repartition.setDayLight(matrice)
-        floor_repartition.setNightLight(matrice)
-        floor_repartition.setUrban(matrice,streetLamp,mailBox)
-        floor_repartition.carsAnim(matrice, cars)
+        mat=copy.deepcopy(floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std))
+        setMatrice(mat)
+        floor_repartition.setDayLight(mat)
+        floor_repartition.setUrban(mat,streetLamp,urbanObjects)
+        floor_repartition.carsAnim(mat, cars)
         
         # # Create a duplicate linked object of '_Building1'
         # for x in np.linspace(-size/2, size/2, size):

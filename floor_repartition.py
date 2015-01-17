@@ -496,16 +496,21 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
                 newPark.location = (2*i, 2*j, 0)
                 scene.objects.link(newPark)
                 newPark.parent = p_rep
-    cameraPath(matrice)
     return matrice
 
 
-def cameraPath(matrice):
+def cameraPath(matrice,vidLimit):
+
+    #delete camera path
+    for i in range(0,bpy.context.scene.frame_end):
+        bpy.context.scene.frame_current=i
+        bpy.ops.anim.keyframe_delete_v3d()
+
+
     bpy.ops.object.select_all(action='DESELECT')
     camera = bpy.data.objects.get('Camera') 
     bpy.context.scene.frame_current = 0
     speed=12
-    vidLimit=25
 
     size=len(matrice)
     i=math.floor(size/2)
@@ -547,9 +552,22 @@ def cameraPath(matrice):
         z-=10
 
     iAngle=math.radians(100)
-    camera.rotation_euler=[iAngle,jAngle,zAngle]
 
-    while i>=0 and j>=0 and i<size and j<size and vidLimit>0:
+    while vidLimit>0:
+        if i<0:
+            zAngle+=math.radians(180)
+            i+=1
+        elif  j<0:
+            zAngle+=math.radians(180)
+            j+=1
+        elif i>=size :
+            zAngle+=math.radians(180)
+            i-=1
+        elif j>=size :
+            zAngle+=math.radians(180)
+            j-=1
+            
+        camera.rotation_euler=[iAngle,jAngle,zAngle]
         vidLimit-=1
         camera.location=[2*i,2*j,0.5]
         if matrice[i][j]==30:
@@ -653,10 +671,7 @@ def cameraPath(matrice):
 
 
             
-        #delete camera path
-    """for i in range(0,1500):
-        bpy.context.scene.frame_current=i
-        bpy.ops.anim.keyframe_delete_v3d()"""
+
 
 
 
@@ -701,29 +716,29 @@ def carsAnim(matrice, cars):
             listCar[i][0].select=True
             bpy.ops.anim.keyframe_insert_menu(type='Location')
             bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+            bpy.ops.anim.keyframe_insert_menu(type='Scaling')
             if listCar[i][3]==0:
-                if listCar[i][0].location[1]+1<size:
+                if listCar[i][2]-1>=0:
                     listCar[i][2]-=1
                     listCar[i][0].location[1]-=2
                 else:
-                    bpy.ops.object.delete(use_global=False)
-                    del listCar[i]
+                    print("out : ",i)
+                    listCar[i][0].scale=[0,0,0]
 
             elif listCar[i][3]==1:
-                if listCar[i][0].location[1]-1>0:
+                if listCar[i][2]+1<size:
                     listCar[i][2]+=1
                     listCar[i][0].location[1]+=2
                 else:
-                    bpy.ops.object.delete(use_global=False)
-                    del listCar[i]
+                    listCar[i][0].scale=[0,0,0]
             elif listCar[i][3]==2:
                 print("ok")
             elif listCar[i][3]==3:
                 print("ok")
             i+=1
-        bpy.context.scene.frame_current +=34
+        bpy.context.scene.frame_current +=30
 
-def setUrban(matrice,streetLamp,mailBox):
+def setUrban(matrice,streetLamp,urbanObjects):
 	city = bpy.data.objects['City']
 	bpy.ops.object.add(type='EMPTY')
 	urbanRep = bpy.context.object
@@ -738,17 +753,24 @@ def setUrban(matrice,streetLamp,mailBox):
 				newLamp.parent = urbanRep
 				newLamp.location = (2*i,2*j, 0)
 				newLamp.rotation_euler=[0,0,math.radians(90)]
+
+				if random.randint(0,1):
+					newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
+					bpy.context.scene.objects.link(newUrbanObject)
+					newUrbanObject.parent = urbanRep
+					newUrbanObject.location = (2*i,2*j, 0)
+					newUrbanObject.rotation_euler[2]+=math.radians(90)
 			elif matrice[i][j]==31:
 				newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
 				bpy.context.scene.objects.link(newLamp)
 				newLamp.parent = urbanRep
 				newLamp.location = (2*i,2*j, 0)
 
-				if random.randint(0,2):
-					newMailbox=mailBox[random.randint(0,len(mailBox)-1)].copy()
-					bpy.context.scene.objects.link(newMailbox)
-					newMailbox.parent = urbanRep
-					newMailbox.location = (2*i,2*j, 0)
+				if random.randint(0,1):
+					newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
+					bpy.context.scene.objects.link(newUrbanObject)
+					newUrbanObject.parent = urbanRep
+					newUrbanObject.location = (2*i,2*j, 0)
 
 def setDayLight(matrice):
 	size=len(matrice)
@@ -760,6 +782,7 @@ def setDayLight(matrice):
 	sunObject.data.shadow_soft_size = 3
 	sun.use_nodes=True
 	sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
+	sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
 
 	bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
 
