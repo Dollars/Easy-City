@@ -130,7 +130,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
 
         urbanfilepath = os.path.join(directory, "models/urban.blend")
         with bpy.data.libraries.load(urbanfilepath, link=True) as (data_from, data_to):
-            data_to.objects = [name for name in data_from.objects if name.startswith("street") or name.startswith("mail")]
+            data_to.objects = [name for name in data_from.objects if name.startswith("street") or name.startswith("urban")]
 
         worldfilepath = os.path.join(directory, "models/sky.blend")
         with bpy.data.libraries.load(worldfilepath, link=True) as (data_from, data_to): 
@@ -170,7 +170,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         parks = [obj for obj in bpy.data.objects if "park" in obj.name] 
         cars = [obj for obj in bpy.data.objects if "car" in obj.name]
         streetLamp=[obj for obj in bpy.data.objects if "street" in obj.name]
-        mailBox=[obj for obj in bpy.data.objects if "mail" in obj.name]
+        urbanObjects=[obj for obj in bpy.data.objects if "urban" in obj.name]
         print("taille cars : ",len(cars))
 
         bpy.context.scene.render.engine = 'CYCLES'
@@ -179,7 +179,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         mat=copy.deepcopy(floor_repartition.draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std))
         setMatrice(mat)
         floor_repartition.setDayLight(mat)
-        floor_repartition.setUrban(mat,streetLamp,mailBox)
+        floor_repartition.setUrban(mat,streetLamp,urbanObjects)
         floor_repartition.carsAnim(mat, cars)
         
         # # Create a duplicate linked object of '_Building1'
