@@ -254,6 +254,8 @@ def mark_pattern(matrice, pattern, pattern_val=1, pos_val=-1, fill_val=10):
             matrice[m == 1] = pos_val
             matrice[m == 2] = fill_val
             return True
+        else:
+            return False
     return False
 
 #Parks in the city
@@ -293,22 +295,21 @@ def building_repartition(matrice, buildings, height_mean, height_std):
     distrib = np.array([], dtype=int)
     heights = np.array(list(block_wide.keys()))
 
-    blocks = (matrice == 1).astype(int)
-    free_space = blocks.sum()
+    free_space = np.sum((matrice == 1).astype(int))
 
     while free_space > 0:
         val = random.normalvariate(height_mean, height_std)
         key = find_nearest(heights, val)
         if free_space - block_wide[key] >= 0:
-            distrib = np.append(distrib, heightmap[key])
-            free_space = free_space - block_wide[key]
+            height = heightmap[key]
+            shape = np.array(buildings[height]['shape'])
+            marked = mark_pattern(matrice, shape, 1, buildings[key]['index'], 10)
+            if marked:
+                free_space = np.sum((matrice == 1).astype(int))
+            else:
+                heights = np.delete(heights, np.nonzero((heights == key)))
         else:
             heights = np.delete(heights, np.nonzero((heights == key)))
-
-    for key in distrib:
-        shape = np.array(buildings[key]['shape'])
-        mark_pattern(matrice, shape, 1, buildings[key]['index'], 10)
-
 
 def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park_mean, height_mean, height_std):
     scene = bpy.context.scene
@@ -722,7 +723,6 @@ def carsAnim(matrice, cars):
                     listCar[i][2]-=1
                     listCar[i][0].location[1]-=2
                 else:
-                    print("out : ",i)
                     listCar[i][0].scale=[0,0,0]
 
             elif listCar[i][3]==1:
