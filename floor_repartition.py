@@ -303,7 +303,7 @@ def building_repartition(matrice, buildings, height_mean, height_std):
         if free_space - block_wide[key] >= 0:
             height = heightmap[key]
             shape = np.array(buildings[height]['shape'])
-            marked = mark_pattern(matrice, shape, 1, buildings[key]['index'], 10)
+            marked = mark_pattern(matrice, shape, 1, buildings[height]['index'], 10)
             if marked:
                 free_space = np.sum((matrice == 1).astype(int))
             else:
