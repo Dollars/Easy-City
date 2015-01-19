@@ -500,7 +500,7 @@ def draw_roads_and_buildings(size, roads, buildings, max_block_size, parks, park
     return matrice
 
 
-def cameraPath(matrice,vidLimit):
+def cameraPath(matrice,vidLimit,speedRate):
 
     #delete camera path
     for i in range(0,bpy.context.scene.frame_end):
@@ -512,6 +512,11 @@ def cameraPath(matrice,vidLimit):
     camera = bpy.data.objects.get('Camera') 
     bpy.context.scene.frame_current = 0
     speed=12
+    if speedRate<3:
+        speed*=speedRate+1
+    elif speedRate>3:
+        speed/=speedRate-2
+
 
     size=len(matrice)
     i=math.floor(size/2)
@@ -713,92 +718,188 @@ def carsAnim(matrice, cars):
     for k in range(0,100):
         i=0
         while i<len(listCar):
+
+                
             bpy.ops.object.select_all(action='DESELECT')
             listCar[i][0].select=True
             bpy.ops.anim.keyframe_insert_menu(type='Location')
             bpy.ops.anim.keyframe_insert_menu(type='Rotation')
             bpy.ops.anim.keyframe_insert_menu(type='Scaling')
-            if listCar[i][3]==0:
-                if listCar[i][2]-1>=0:
-                    listCar[i][2]-=1
-                    listCar[i][0].location[1]-=2
-                else:
-                    listCar[i][0].scale=[0,0,0]
 
-            elif listCar[i][3]==1:
-                if listCar[i][2]+1<size:
-                    listCar[i][2]+=1
-                    listCar[i][0].location[1]+=2
+            if listCar[i][3]==0:
+                if random.randint(0,1):
+                    listCar[i][0].location[0] = (2*listCar[i][1])-0.6
                 else:
-                    listCar[i][0].scale=[0,0,0]
-            elif listCar[i][3]==2:
-                print("ok")
+                    listCar[i][0].location[0] = (2*listCar[i][1])-0.2
+            elif listCar[i][3]==1:
+                if random.randint(0,1):
+                    listCar[i][0].location[0] = (2*listCar[i][1])+0.6
+                else:
+                    listCar[i][0].location[0] = (2*listCar[i][1])+0.2
             elif listCar[i][3]==3:
-                print("ok")
+                if random.randint(0,1):
+                    listCar[i][0].location[1] = (2*listCar[i][2])-0.6
+                else:
+                    listCar[i][0].location[1] = (2*listCar[i][2])-0.2
+            elif listCar[i][3]==2:
+                if random.randint(0,1):
+                    listCar[i][0].location[1] = (2*listCar[i][2])+0.6
+                else:
+                    listCar[i][0].location[1] = (2*listCar[i][2])+0.2
+
+            if listCar[i][1]<0 or listCar[i][1]>=size or listCar[i][2]<0 or listCar[i][2]>=size :
+                print("allo ?")
+                listCar[i][0].scale=[0,0,0]
+            else:
+                if matrice[listCar[i][1]][listCar[i][2]]==30:
+                    if listCar[i][3]==2:
+                        listCar[i][1]-=1
+                        listCar[i][0].location[0]-=2
+
+                    elif listCar[i][3]==3:
+                        listCar[i][1]+=1
+                        listCar[i][0].location[0]+=2
+                elif matrice[listCar[i][1]][listCar[i][2]]==31:
+                    if listCar[i][3]==0:
+                        listCar[i][2]-=1
+                        listCar[i][0].location[1]-=2
+
+                    elif listCar[i][3]==1:
+                        listCar[i][2]+=1
+                        listCar[i][0].location[1]+=2
+                else:
+
+                    left=False
+                    right=False
+                    up=False
+                    down=False
+                    coeff=0
+                    if listCar[i][3]==2 or listCar[i][3]==3:
+                        if matrice[listCar[i][1]][listCar[i][2]]==42 or matrice[listCar[i][1]][listCar[i][2]]==43 or matrice[listCar[i][1]][listCar[i][2]]==60:
+                            if random.randint(0,1):
+                                right=True
+                            else:
+                                left=True
+                        elif matrice[listCar[i][1]][listCar[i][2]]==40 or matrice[listCar[i][1]][listCar[i][2]]==50 or matrice[listCar[i][1]][listCar[i][2]]==51:
+                            right=True
+                        elif matrice[listCar[i][1]][listCar[i][2]]==41 or matrice[listCar[i][1]][listCar[i][2]]==52 or matrice[listCar[i][1]][listCar[i][2]]==53:
+                            left=True
+                        else:
+                            print("vertical error crossing cars")
+                        if (listCar[i][3]==2 and left) or (listCar[i][3]==3 and right):
+                            coeff=-1
+                        else:
+                            coeff=1
+                    elif listCar[i][3]==0 or listCar[i][3]==1:
+                        if matrice[listCar[i][1]][listCar[i][2]]==40 or matrice[listCar[i][1]][listCar[i][2]]==41 or matrice[listCar[i][1]][listCar[i][2]]==60:
+                            if random.randint(0,1):
+                                up=True
+                            else:
+                                down=True
+                        elif matrice[listCar[i][1]][listCar[i][2]]==42 or matrice[listCar[i][1]][listCar[i][2]]==50 or matrice[listCar[i][1]][listCar[i][2]]==53:
+                            up=True
+                        elif matrice[listCar[i][1]][listCar[i][2]]==43 or matrice[listCar[i][1]][listCar[i][2]]==51 or matrice[listCar[i][1]][listCar[i][2]]==52:
+                            down=True
+                        else:
+                            print("horizontal error crossing cars : ",matrice[listCar[i][1]][listCar[i][2]])
+                        if (listCar[i][3]==0 and down) or (listCar[i][3]==1 and up):
+                            coeff=-1
+                        else:
+                            coeff=1
+                    else:
+                        print("error zAngle cars")
+                    listCar[i][0].rotation_euler[2]-=(math.radians(45)*coeff)
+                    bpy.ops.object.select_all(action='DESELECT')
+                    listCar[i][0].select=True
+                    bpy.ops.anim.keyframe_insert_menu(type='Location')
+                    bpy.ops.anim.keyframe_insert_menu(type='Rotation')
+                    bpy.ops.anim.keyframe_insert_menu(type='Scaling')
+                    
+                    listCar[i][0].rotation_euler[2]-=(math.radians(45)*coeff)
+
+                    if ((math.degrees(listCar[i][0].rotation_euler[2])+1)%360)<10:
+                        listCar[i][2]-=1
+                        listCar[i][0].location[1]-=2
+                        listCar[i][3]=0
+                    elif ((math.degrees(listCar[i][0].rotation_euler[2])+1)%360-90)<10:
+                        listCar[i][1]+=1
+                        listCar[i][0].location[0]+=2
+                        listCar[i][3]=3
+                    elif ((math.degrees(listCar[i][0].rotation_euler[2])+1)%360-180)<10:
+                        listCar[i][2]+=1
+                        listCar[i][0].location[1]+=2
+                        listCar[i][3]=1
+                    else:
+                        listCar[i][1]-=1
+                        listCar[i][0].location[0]-=2
+                        listCar[i][3]=2
+                        print("faute angle: ",math.degrees(listCar[i][0].rotation_euler[2])%360, " : ",listCar[i][1], listCar[i][2], i )
+
             i+=1
+
         bpy.context.scene.frame_current +=30
 
 def setUrban(matrice,streetLamp,urbanObjects):
-	city = bpy.data.objects['City']
-	bpy.ops.object.add(type='EMPTY')
-	urbanRep = bpy.context.object
-	urbanRep.name = 'urban'
-	urbanRep.parent = city 
-	size=len(matrice)
-	for i in range (0,size):
-		for j in range(0,size):
-			if matrice[i][j]==30:
-				newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
-				bpy.context.scene.objects.link(newLamp)
-				newLamp.parent = urbanRep
-				newLamp.location = (2*i,2*j, 0)
-				newLamp.rotation_euler=[0,0,math.radians(90)]
+    city = bpy.data.objects['City']
+    bpy.ops.object.add(type='EMPTY')
+    urbanRep = bpy.context.object
+    urbanRep.name = 'urban'
+    urbanRep.parent = city 
+    size=len(matrice)
+    for i in range (0,size):
+        for j in range(0,size):
+            if matrice[i][j]==30:
+                newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
+                bpy.context.scene.objects.link(newLamp)
+                newLamp.parent = urbanRep
+                newLamp.location = (2*i,2*j, 0)
+                newLamp.rotation_euler=[0,0,math.radians(90)]
 
-				if random.randint(0,1):
-					newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
-					bpy.context.scene.objects.link(newUrbanObject)
-					newUrbanObject.parent = urbanRep
-					newUrbanObject.location = (2*i,2*j, 0)
-					newUrbanObject.rotation_euler[2]+=math.radians(90)
-			elif matrice[i][j]==31:
-				newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
-				bpy.context.scene.objects.link(newLamp)
-				newLamp.parent = urbanRep
-				newLamp.location = (2*i,2*j, 0)
+                if random.randint(0,1):
+                    newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
+                    bpy.context.scene.objects.link(newUrbanObject)
+                    newUrbanObject.parent = urbanRep
+                    newUrbanObject.location = (2*i,2*j, 0)
+                    newUrbanObject.rotation_euler[2]+=math.radians(90)
+            elif matrice[i][j]==31:
+                newLamp=streetLamp[random.randint(0, len(streetLamp)-1)].copy()
+                bpy.context.scene.objects.link(newLamp)
+                newLamp.parent = urbanRep
+                newLamp.location = (2*i,2*j, 0)
 
-				if random.randint(0,1):
-					newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
-					bpy.context.scene.objects.link(newUrbanObject)
-					newUrbanObject.parent = urbanRep
-					newUrbanObject.location = (2*i,2*j, 0)
+                if random.randint(0,1):
+                    newUrbanObject=urbanObjects[random.randint(0,len(urbanObjects)-1)].copy()
+                    bpy.context.scene.objects.link(newUrbanObject)
+                    newUrbanObject.parent = urbanRep
+                    newUrbanObject.location = (2*i,2*j, 0)
 
 def setDayLight(matrice):
-	size=len(matrice)
-	sun=bpy.data.lamps.get("Lamp")
-	sunObject=bpy.data.objects.get("Lamp")
-	sun.type = 'SUN'
-	sunObject.location=[size,size,2*size]
-	sunObject.rotation_euler=[0,0,0]
-	sunObject.data.shadow_soft_size = 3
-	sun.use_nodes=True
-	sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
-	sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
+    size=len(matrice)
+    sun=bpy.data.lamps.get("Lamp")
+    sunObject=bpy.data.objects.get("Lamp")
+    sun.type = 'SUN'
+    sunObject.location=[size,size,2*size]
+    sunObject.rotation_euler=[0,0,0]
+    sunObject.data.shadow_soft_size = 3
+    sun.use_nodes=True
+    sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
+    sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
 
-	bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
-
-
-	materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
-	for materiel in materiels:
-		materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=0
+    bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
 
 
-def setNightLight(matrice):	
-	materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
-	for materiel in materiels:
-		materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=1
+    materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
+    for materiel in materiels:
+        materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=0
 
-	bpy.context.scene.world=bpy.data.worlds.get("myWorldNight")
-	bpy.data.lamps.get("Lamp").node_tree.nodes["Emission"].inputs[0].default_value = (0.100091, 0.0998705, 0.168584, 1)
+
+def setNightLight(matrice): 
+    materiels=[mat for mat in bpy.data.materials if "nightBody" in mat.name]
+    for materiel in materiels:
+        materiel.node_tree.nodes["dayOrNight"].inputs[0].default_value=1
+
+    bpy.context.scene.world=bpy.data.worlds.get("myWorldNight")
+    bpy.data.lamps.get("Lamp").node_tree.nodes["Emission"].inputs[0].default_value = (0.100091, 0.0998705, 0.168584, 1)
 
 
 

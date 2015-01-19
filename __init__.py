@@ -17,7 +17,7 @@ if "bpy" in locals():
     imp.reload(floor_repartition)
     print("Reloaded multifiles")
 else:
-    from . import floor_repartition	
+    from . import floor_repartition 
     print("Imported multifiles")
  
 import bpy
@@ -28,9 +28,10 @@ import copy
 bpy.types.Scene.city_size = IntProperty(name="Size", default=20)
 bpy.types.Scene.max_block_size = IntProperty(name="Block Size", default=7)
 bpy.types.Scene.park_mean = FloatProperty(name="Proportion of parks", default=0.1, min=0.0, max=1.0)
-bpy.types.Scene.height_mean = FloatProperty(name="Mean building height", default=50.0, min=10.0, max=100.0)
-bpy.types.Scene.height_std = FloatProperty(name="Standard deviation building height", default=10.0, min=5.0, max=50.0)
+bpy.types.Scene.height_mean = FloatProperty(name="Mean building height", default=30.0, min=10.0, max=100.0)
+bpy.types.Scene.height_std = FloatProperty(name="Standard deviation building height", default=15.0, min=5.0, max=50.0)
 bpy.types.Scene.path_size = IntProperty(name="Path Size", default=50, min=0)
+bpy.types.Scene.camera_speed = IntProperty(name="Speed", default=3, min=1,max=5)
 
 matrice=[]
 def setMatrice(mat):
@@ -73,8 +74,14 @@ class EasyCityPanel(bpy.types.Panel):
         row.operator('city.day')
         row.operator('city.night')
         row = layout.row()
+        row.operator('city.cars')
+        row = layout.row()
+        layout.label(text="Camera Path Parameters:")
+        row = layout.row()
         row.operator('city.camera_path')
+        row = layout.row()
         row.prop(scene, 'path_size')
+        row.prop(scene,'camera_speed')
 
 
 class OBJECT_OT_Day(bpy.types.Operator):
@@ -94,12 +101,27 @@ class OBJECT_OT_Night(bpy.types.Operator):
         floor_repartition.setNightLight(matrice)
         return {'FINISHED'}
 
-class OBJECT_OT_Night(bpy.types.Operator):
+class OBJECT_OT_CameraPath(bpy.types.Operator):
     bl_idname = "city.camera_path"
     bl_label = "Generate Camera Path"
     bl_description = "generate a camera path though the city"
     def execute(self,context):
-        floor_repartition.cameraPath(matrice,bpy.context.scene.path_size)
+        floor_repartition.cameraPath(matrice,bpy.context.scene.path_size,bpy.context.scene.camera_speed)
+        return {'FINISHED'}
+
+class OBJECT_OT_Car(bpy.types.Operator):
+    bl_idname = "city.cars"
+    bl_label = "Cars"
+    bl_description = "Generate cars riding throught the city"
+    def execute(self,context):
+        directory = os.path.dirname(__file__)
+        carsfilepath = os.path.join(directory, "models/cars.blend")
+        with bpy.data.libraries.load(carsfilepath, link=True) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name.startswith("car")]
+        cars = [obj for obj in bpy.data.objects if "car" in obj.name]
+        
+        floor_repartition.carsAnim(matrice, cars)
+
         return {'FINISHED'}
 
 
@@ -123,10 +145,6 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         parksfilepath = os.path.join(directory, "models/parks.blend")
         with bpy.data.libraries.load(parksfilepath, link=True) as (data_from, data_to):
             data_to.objects = [name for name in data_from.objects if name.startswith("park")]
-        
-        carsfilepath = os.path.join(directory, "models/cars.blend")
-        with bpy.data.libraries.load(carsfilepath, link=True) as (data_from, data_to):
-            data_to.objects = [name for name in data_from.objects if name.startswith("car")]
 
         urbanfilepath = os.path.join(directory, "models/urban.blend")
         with bpy.data.libraries.load(urbanfilepath, link=True) as (data_from, data_to):
@@ -161,9 +179,9 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         height_mean = scene.height_mean
         height_std = scene.height_std
 
-        roads = {	"straight": bpy.data.objects['roadStraight'],
-        			"roadL": bpy.data.objects['roadL'],
-        			"roadT": bpy.data.objects['roadT'],
+        roads = {   "straight": bpy.data.objects['roadStraight'],
+                    "roadL": bpy.data.objects['roadL'],
+                    "roadT": bpy.data.objects['roadT'],
                     "roadX": bpy.data.objects['roadX']}
 
         buildings = [obj for obj in bpy.data.objects if ("building" in obj.name or "house" in obj.name)]
@@ -171,7 +189,7 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         cars = [obj for obj in bpy.data.objects if "car" in obj.name]
         streetLamp=[obj for obj in bpy.data.objects if "street" in obj.name]
         urbanObjects=[obj for obj in bpy.data.objects if "urban" in obj.name]
-        print("taille cars : ",len(cars))
+        
 
         bpy.context.scene.render.engine = 'CYCLES'
 
@@ -180,7 +198,6 @@ class OBJECT_OT_GenerateCity(bpy.types.Operator):
         setMatrice(mat)
         floor_repartition.setDayLight(mat)
         floor_repartition.setUrban(mat,streetLamp,urbanObjects)
-        floor_repartition.carsAnim(mat, cars)
         
         # # Create a duplicate linked object of '_Building1'
         # for x in np.linspace(-size/2, size/2, size):
