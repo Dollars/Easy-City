@@ -884,6 +884,7 @@ def setDayLight(matrice):
     sun.use_nodes=True
     sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
     sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
+    sun.cycles.use_multiple_importance_sampling = True
 
     bpy.context.scene.world=bpy.data.worlds.get("myWorldDay")
 
