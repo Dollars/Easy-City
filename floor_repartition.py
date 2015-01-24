@@ -880,7 +880,7 @@ def setDayLight(matrice):
     sun.type = 'SUN'
     sunObject.location=[size,size,2*size]
     sunObject.rotation_euler=[0,0,0]
-    sunObject.data.shadow_soft_size = 3
+    sunObject.data.shadow_soft_size = 15
     sun.use_nodes=True
     sun.node_tree.nodes["Emission"].inputs[1].default_value = 7
     sun.node_tree.nodes["Emission"].inputs[0].default_value = (1, 0.947, 0.8, 1)
